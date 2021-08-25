@@ -1,7 +1,6 @@
 while (true) do
   clear
-  python3 main.py
-  bat baby-girl.txt
+  python3 main.py | bat
   echo 'done!'
   read var
 done

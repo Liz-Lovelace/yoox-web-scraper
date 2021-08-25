@@ -2,21 +2,9 @@ import requests
 import re
 from pyquery import PyQuery
 
-#these are test cases for individual products
-testLinks = [
-'https://www.yoox.com/ru/17106928PA/item#dept=collgirl_kid&sts=sr_collgirl_kid80',
-'https://www.yoox.com/ru/17107493VC/item#dept=collgirl_kid&sts=sr_collgirl_kid80',
-'https://www.yoox.com/ru/17112120MG/item#dept=collgirl_kid&sts=sr_collgirl_kid80',
-'https://www.yoox.com/ru/17098128HC/item#dept=collgirl_kid&sts=sr_collgirl_kid80',
-'https://www.yoox.com/ru/17099160RG/item#dept=collgirl_kid&sts=sr_collgirl_kid80',
-'https://www.yoox.com/ru/17037876WV/item#dept=collgirl_kid&sts=sr_collgirl_kid80',
-'https://www.yoox.com/ru/17091579TC/item#dept=collgirl_kid&sts=sr_collgirl_kid80',
-'https://www.yoox.com/ru/17106942AS/item#dept=collgirl_kid&sts=sr_collgirl_kid80',
-'https://www.yoox.com/ru/17098124TI/item#dept=collgirl_kid&sts=sr_collgirl_kid80',
-'https://www.yoox.com/ru/17103763NS/item#dept=collgirl_kid&sts=sr_collgirl_kid80'
-]
-# It's important to copy these links by right-clicking the shoes section and
+# It's important to copy these links by right-clicking the "shoes" section and
 # pressing "copy link to clipboard" instead of going to the link and copying the url!
+#baby-girl, child-girl, teen-girl, baby-boy, child-boy, teen-boy
 catalogLinks = [
 'https://www.yoox.com/ru/%D0%B4%D0%BB%D1%8F%20%D0%B4%D0%B5%D0%B2%D0%BE%D1%87%D0%B5%D0%BA/%D0%BA%D0%BE%D0%BB%D0%BB%D0%B5%D0%BA%D1%86%D0%B8%D0%B8/%D0%BC%D0%B0%D0%BB%D1%8B%D1%88%D0%B8/shoponline/%D0%BE%D0%B1%D1%83%D0%B2%D1%8C_mc#/dept=collgirl_baby&gender=D&page=1&season=X',
 'https://www.yoox.com/ru/%D0%B4%D0%BB%D1%8F%20%D0%B4%D0%B5%D0%B2%D0%BE%D1%87%D0%B5%D0%BA/%D0%BA%D0%BE%D0%BB%D0%BB%D0%B5%D0%BA%D1%86%D0%B8%D0%B8/%D0%B4%D0%B5%D1%82%D0%B8/shoponline/%D0%BE%D0%B1%D1%83%D0%B2%D1%8C_mc#/dept=collgirl_kid&gender=D&page=1&attributes=%7b%27ctgr%27%3a%5b%27clztr%27%5d%7d&season=X',
@@ -67,14 +55,28 @@ def findInfo(catalogHtml):
 
   return items
 
-catalogFile = open('./data/catalogs/baby-girl.html', 'r')
-catalogContents = catalogFile.read()
-catalogFile.close()
+def parseCatalogsAndWriteIntoFiles():
+  for catalogI in range(6):
+    catalogFile = open('./data/catalogs/'+getCatalogNameFromNum(catalogI)+'.html', 'r')
+    catalogContents = catalogFile.read()
+    catalogFile.close()
+    output = open(getCatalogNameFromNum(catalogI) + '.txt', 'w')
+    for (i, t) in enumerate(findInfo(catalogContents)):
+      #maximum 1 for one page is around 120
+      if (i == 100):
+        break
+      output.write(t[0] + '\n' +t[1] + '\n' + t[2] + '\n\n')
 
-output = open(getCatalogNameFromNum(0) + '.txt', 'w')
-for (i, t) in enumerate(findInfo(catalogContents)):
-  if (i == 100):
-    break
-  output.write(t[0] + '\n' +t[1] + '\n' + t[2] + '\n\n')
+    output.close()
+    print('done with', getCatalogNameFromNum(catalogI))
 
-output.close()
+def visualCheckFiles():
+  for fileI in range(6):
+    fileName = getCatalogNameFromNum(fileI) + '.txt'
+    file = open(fileName, 'r')
+    contents = file.read()
+    file.close()
+    for (i, line) in enumerate(contents.split('\n')):
+      print(('\n' if i % 4 == 0 else ' | ' )+ line, end='')
+      
+visualCheckFiles()

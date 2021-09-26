@@ -41,7 +41,6 @@ def findInfo(catalogHtml):
   d = PyQuery(catalogHtml)
   imageContainers = d('.itemContainer .itemImg a')
   items = []
-  #idRe = re.compile('items/../.........._')
   for (i, item) in enumerate(imageContainers.items()):
     cardUrl = 'https://yoox.com' + item.attr('href')
     imgUrl = item('img').attr('src')

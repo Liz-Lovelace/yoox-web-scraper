@@ -1,5 +1,5 @@
 while (true) do
   clear
-  node index.js | less
+  node index.js
   read var
 done

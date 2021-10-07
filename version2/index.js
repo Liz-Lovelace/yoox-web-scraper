@@ -9,6 +9,9 @@ function getItems(html) {
   let itemProperties = [];
   for (let i = 0; i < items.length; i++){
     let item = items[i];
+    //soldout items require different parsing, so I'm skipping them
+    if (item.attribs['class'].indexOf('soldout') != -1)
+      continue;
     let item$ = cheerio.load(item);
     let properties = {}
     properties.parentCategoryId = item.attribs['data-macrocategory_id'];
@@ -17,8 +20,6 @@ function getItems(html) {
     properties.categoryName = item.attribs['data-category'];
     properties.id = item.attribs['data-current-cod10'];    
     
-    console.log(item$('.itemImg > a')['0']);
-    console.log(item$('.itemImg > a'));
     properties.productUrl = 'https://yoox.com' + item$('.itemImg > a')['0'].attribs['href'];
     
     let img = item$('.itemImg > a > img')['0'];
@@ -61,14 +62,14 @@ async function fetchWrite(path, link){
     resolve();
   });
 }
-/*
+
 async function batchDownload(){
   let catalogLimit = 544;
   let dir_path = new URL('./data/catalogs/womens-shoes/', import.meta.url);
   let catalog_base_link = 'https://www.yoox.com/ru/%D0%B4%D0%BB%D1%8F%20%D0%B6%D0%B5%D0%BD%D1%89%D0%B8%D0%BD/%D0%BE%D0%B1%D1%83%D0%B2%D1%8C/shoponline?page=';
-  for (let batchi = 0; batchi < 544; batchi += 50){
-    let a = batchi + 1;
-    let b = batchi + 50;
+  for (let batchi = 50; batchi < 544; batchi += 100){
+    let a = batchi;
+    let b = batchi + 1;
     let batch_promises = [];
     console.time('fetching');
     for (let i = a; i < b; i++){
@@ -79,10 +80,13 @@ async function batchDownload(){
     console.timeEnd('fetching');
   }
 }
-*/
+
 
 async function main() {
-  
+  //let html = await fs.promises.readFile(new URL('./data/catalogs/womens-shoes/100.html', import.meta.url), 'utf8');
+  //let items = getItems(html);
+  //console.log(items.length);
+  batchDownload();
 }
 
 main();

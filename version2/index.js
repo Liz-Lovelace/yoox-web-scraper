@@ -37,7 +37,6 @@ function getItems(html) {
 }
 
 function findBrokenItems(items){
-  let brokenItems = []
   items.forEach(item => {
     if(!( item.parentCategoryId
        && item.parentCategoryName
@@ -47,10 +46,10 @@ function findBrokenItems(items){
        && item.productUrl
        && item.imageUrl)) 
     {
-      brokenItems.push(item);
+      console.log('broken item!!!');
+      console.log(item);
     }
   });
-  return brokenItems;
 }
 
 async function fetchWrite(path, link){
@@ -81,12 +80,23 @@ async function batchDownload(){
   }
 }
 
+async function writeRawJson(){
+  let items = []
+  for (let i = 1; i <=544; i++){
+    let html = await fs.promises.readFile(new URL('./data/catalogs/womens-shoes/100.html', import.meta.url), 'utf8');
+    let catalogItems = getItems(html);
+    findBrokenItems(catalogItems);
+    items = items.concat(catalogItems);
+    console.log(i + ' ' + i / 544 * 100 + '%')
+  }
+  console.log(items.length);
+  console.log('writing...');
+  await fs.promises.writeFile(new URL('./raw.json', import.meta.url), JSON.stringify(items));
+  console.log('done!');
+}
 
 async function main() {
-  //let html = await fs.promises.readFile(new URL('./data/catalogs/womens-shoes/100.html', import.meta.url), 'utf8');
-  //let items = getItems(html);
-  //console.log(items.length);
-  batchDownload();
+  writeRawJson();
 }
 
 main();

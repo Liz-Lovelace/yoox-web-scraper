@@ -4,6 +4,7 @@ import fs from 'fs';
 import { URL } from 'url';
 
 function getItems(html) {
+  //this operation takes by far the most time
   let $ = cheerio.load(html);
   let items = $('.itemContainer');
   let itemProperties = [];
@@ -27,29 +28,14 @@ function getItems(html) {
       properties.imageUrl = img.attribs['data-original'];
     } else if (img.attribs['src']){
       properties.imageUrl = img.attribs['src'];
-    } else {
+    } else
       throw 'can\'t find image!!!';
-    }
-    //TODO: remove extra tags from image url.
+    //this removes url arguments after '?'
+    properties.imageUrl = properties.imageUrl.match(/(^.*)\?/)[1];
+
     itemProperties.push(properties);
   }
   return itemProperties;
-}
-
-function findBrokenItems(items){
-  items.forEach(item => {
-    if(!( item.parentCategoryId
-       && item.parentCategoryName
-       && item.categoryId
-       && item.categoryName
-       && item.id
-       && item.productUrl
-       && item.imageUrl)) 
-    {
-      console.log('broken item!!!');
-      console.log(item);
-    }
-  });
 }
 
 async function fetchWrite(path, link){
@@ -62,27 +48,11 @@ async function fetchWrite(path, link){
   });
 }
 
-async function batchDownload(){
-  let catalogLimit = 544;
-  let dir_path = new URL('./data/catalogs/womens-shoes/', import.meta.url);
-  let catalog_base_link = 'https://www.yoox.com/ru/%D0%B4%D0%BB%D1%8F%20%D0%B6%D0%B5%D0%BD%D1%89%D0%B8%D0%BD/%D0%BE%D0%B1%D1%83%D0%B2%D1%8C/shoponline?page=';
-  for (let batchi = 50; batchi < 544; batchi += 100){
-    let a = batchi;
-    let b = batchi + 1;
-    let batch_promises = [];
-    console.time('fetching');
-    for (let i = a; i < b; i++){
-      let path = new URL('./'+i+'.html', dir_path);
-      batch_promises.push(fetchWrite(path, catalog_base_link + i));
-    }
-    await Promise.all(batch_promises);
-    console.timeEnd('fetching');
-  }
-}
-
+//not sure what this does lol
 async function writeRawJson(){
   let items = []
   for (let i = 1; i <=544; i++){
+    //this is wrong i'm pretty sure
     let html = await fs.promises.readFile(new URL('./data/catalogs/womens-shoes/100.html', import.meta.url), 'utf8');
     let catalogItems = getItems(html);
     findBrokenItems(catalogItems);
@@ -95,8 +65,33 @@ async function writeRawJson(){
   console.log('done!');
 }
 
+function rawToABAi(raw){
+  let formatted = [];
+  for (let i = 0; i < raw.length; i++){
+    let obj = {};
+    obj.id = raw[i].id
+    obj.category_id = raw[i].categoryId;
+    obj.parent_category_id = raw[i].parentCategoryId;
+    obj.product_url = raw[i].productUrl;
+    obj.image_url = raw[i].imageUrl;
+    formatted.push(obj);
+  }
+  return formatted;
+}
+
 async function main() {
-  writeRawJson();
+  let all_items = [];
+  //don't forget this  vvv
+  for (let i = 1; i <= 544; i++){
+    let catalogHtml = await fs.promises.readFile(new URL(`./data/catalogs/womens-shoes/${i}.html`, import.meta.url), 'utf8');
+    let raw_items = getItems(catalogHtml);
+    let ABAi_items = rawToABAi(raw_items);
+    all_items = all_items.concat(ABAi_items);
+    if (i % 10 == 0)
+      console.log(`${i}  ${(i/544*100).toFixed(1)}%`)
+  }
+  let all_items_str = JSON.stringify(all_items);
+  await fs.promises.writeFile(new URL('./unchecked_items.json', import.meta.url), all_items_str);
 }
 
 main();

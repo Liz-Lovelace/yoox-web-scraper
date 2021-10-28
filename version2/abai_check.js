@@ -40,7 +40,7 @@ function full_check(j){
   for (let i = 0; i < problems.length; i++){
     console.log(problems[i]);
   }
-  console.log('full_check done');
+  console.log(`full_check done, total elements - ${j.length}`);
 }
 
 let stdin = ''

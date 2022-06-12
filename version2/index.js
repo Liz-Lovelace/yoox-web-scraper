@@ -69,7 +69,7 @@ async function batchDownload(catalogLimit){
   let catalog_base_link = 'https://www.yoox.com/ru/%D0%B4%D0%BB%D1%8F%20%D0%B6%D0%B5%D0%BD%D1%89%D0%B8%D0%BD/%D0%BE%D0%B1%D1%83%D0%B2%D1%8C/shoponline?page=';
   for (let batchi = 1; batchi < catalogLimit; batchi += batch_size){
     let a = batchi;
-    let b = Math.max(batchi + batch_size, catalogLimit + 1);
+    let b = Math.min(batchi + batch_size, catalogLimit + 1);
     let batch_promises = [];
     for (let i = a; i < b; i++){
       let path = new URL('./'+i+'.html', dir_path);

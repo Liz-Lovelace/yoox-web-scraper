@@ -49,20 +49,6 @@ async function fetchWrite(path, link){
   });
 }
 
-function rawToABAi(raw){
-  let formatted = [];
-  for (let i = 0; i < raw.length; i++){
-    let obj = {};
-    obj.id = raw[i].id
-    obj.category_id = raw[i].categoryId;
-    obj.parent_category_id = raw[i].parentCategoryId;
-    obj.product_url = raw[i].productUrl;
-    obj.image_url = raw[i].imageUrl;
-    formatted.push(obj);
-  }
-  return formatted;
-}
-
 async function batchDownload(catalogLimit){
   let batch_size = 50;
   let dir_path = new URL('./data/catalogs/womens-shoes/', import.meta.url);

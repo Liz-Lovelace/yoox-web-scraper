@@ -1,3 +1,4 @@
+import axios from 'axios';
 import cheerio from 'cheerio';
 import fetch from 'node-fetch';
 import fs from 'fs';
@@ -40,29 +41,12 @@ function getItems(html) {
 
 async function fetchWrite(path, link){
   return new Promise(async (resolve, reject)=>{
-    let html = await (await fetch(link)).text();
+    let html = (await axios.get(link)).data;
     if (!html)
-      reject('no html???');
+      reject(`fetch error: skipping ${link}`);
     await fs.promises.writeFile(path, html);
     resolve();
   });
-}
-
-//not sure what this does lol
-async function writeRawJson(){
-  let items = []
-  for (let i = 1; i <=544; i++){
-    //this is wrong i'm pretty sure
-    let html = await fs.promises.readFile(new URL('./data/catalogs/womens-shoes/100.html', import.meta.url), 'utf8');
-    let catalogItems = getItems(html);
-    findBrokenItems(catalogItems);
-    items = items.concat(catalogItems);
-    console.log(i + ' ' + i / 544 * 100 + '%')
-  }
-  console.log(items.length);
-  console.log('writing...');
-  await fs.promises.writeFile(new URL('./raw.json', import.meta.url), JSON.stringify(items));
-  console.log('done!');
 }
 
 function rawToABAi(raw){
@@ -79,16 +63,33 @@ function rawToABAi(raw){
   return formatted;
 }
 
+async function batchDownload(catalogLimit){
+  let batch_size = 50;
+  let dir_path = new URL('./data/catalogs/womens-shoes/', import.meta.url);
+  let catalog_base_link = 'https://www.yoox.com/ru/%D0%B4%D0%BB%D1%8F%20%D0%B6%D0%B5%D0%BD%D1%89%D0%B8%D0%BD/%D0%BE%D0%B1%D1%83%D0%B2%D1%8C/shoponline?page=';
+  for (let batchi = 1; batchi < catalogLimit; batchi += batch_size){
+    let a = batchi;
+    let b = Math.max(batchi + batch_size, catalogLimit + 1);
+    let batch_promises = [];
+    for (let i = a; i < b; i++){
+      let path = new URL('./'+i+'.html', dir_path);
+      batch_promises.push(fetchWrite(path, catalog_base_link + i));
+    }
+    await Promise.all(batch_promises);
+    console.log(`downloaded catalogs ${a}-${b-1}`)
+  }
+}
+
 async function main() {
+  // How many catalogs to download.
+  let total_catalogs = 60;
+  await batchDownload(total_catalogs);
   let all_items = [];
-  //don't forget this  vvv
-  for (let i = 1; i <= 544; i++){
+  for (let i = 1; i <= total_catalogs; i++){
     let catalogHtml = await fs.promises.readFile(new URL(`./data/catalogs/womens-shoes/${i}.html`, import.meta.url), 'utf8');
     let raw_items = getItems(catalogHtml);
-    let ABAi_items = rawToABAi(raw_items);
-    all_items = all_items.concat(ABAi_items);
-    if (i % 10 == 0)
-      console.log(`${i}  ${(i/544*100).toFixed(1)}%`)
+    all_items = all_items.concat(raw_items);
+    console.log(`parsed catalog ${i}. Complete: ${(i/total_catalogs*100).toFixed(1)}%`)
   }
   let all_items_str = JSON.stringify(all_items);
   await fs.promises.writeFile(new URL('./unchecked_items.json', import.meta.url), all_items_str);
